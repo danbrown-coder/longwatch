@@ -84,6 +84,7 @@
   .ev .kind{font-weight:600; letter-spacing:.06em}
   .ev .kind.weather{color:var(--warn)} .ev .kind.power{color:var(--amber)}
   .ev .kind.mech{color:#c98adb} .ev .kind.comms{color:#6aa5e0}
+  .ev .kind.inbound{color:#4ec9b0}
   .ev .kind.human{color:var(--ok)} .ev .kind.escal{color:var(--crit)}
   .ev .act{color:var(--muted)}
   .ev .auto{color:var(--ok); font-size:11px}
@@ -131,7 +132,8 @@
 
 <footer>
   <span>Built by Dan Brown for the Icarus application</span>
-  <span>Escalations reach humans over existing channels: secure message, encrypted email, phone — routed by emergency tier</span>
+  <span>Two-way channels: escalations go out by tier; signed emails and secure messages from permissioned senders command the fleet in</span>
+  <span>Short-term mission cache: every event feeds the next decision</span>
   <span>Simulation: events are generated, the operations pattern is the demo</span>
   <span>Same architecture as my AI-Native MSP: agent acts, approval gates guard, audit log records</span>
 </footer>
@@ -178,7 +180,7 @@ drawFleet();
 // ---- event library: [kind, detect, action] ----
 const EVENTS = [
   ['weather', () => `50 hPa wind ${rnd(39,54)} kt over station — exceeds 38 kt hold threshold`,
-              () => `climbed to FL${rnd(650,662)}; wind ${rnd(11,24)} kt in upper band. Hold maintained.`,
+              () => `climbed to FL${rnd(650,662)}; wind ${rnd(11,24)} kt in upper band. Matched Day 6 pattern in mission cache; reused climb profile.`,
               id => `Strong wind hit ${id}'s altitude; the agent climbed above it. No human needed.`],
   ['weather', () => `jet streak forecast to clip holding ellipse in ${rnd(4,9)} h`,
               () => `shifted station ${rnd(35,85)} nm ${pick(['N','NE','E','W','SW'])}; loiter re-optimized inside cleared corridor.`,
@@ -190,7 +192,7 @@ const EVENTS = [
               () => `payload duty −${rnd(25,40)}%, drift-descent profile armed; margin restored +${rnd(3,6)}%.`,
               id => `${id} looked short on battery for the night; the agent dimmed the payload and made it through.`],
   ['power',   () => `cell group ${rnd(2,4)} delta ${rnd(40,65)} mV above pack mean`,
-              () => `pack rebalanced in-flight; group flagged for depot inspection. Monitoring.`,
+              () => `pack rebalanced in-flight; recurrence of Day 5 event in mission cache — watch threshold tightened. Flagged for depot.`,
               id => `One battery group on ${id} drifted; the agent rebalanced it mid-flight.`],
   ['mech',    () => `motor ${rnd(1,4)} temp +${rnd(6,12)}°C vs symmetric twin at equal load`,
               () => `derated to ${rnd(78,88)}%; thrust redistributed. Trend flat after ${rnd(15,40)} min.`,
@@ -201,6 +203,15 @@ const EVENTS = [
   ['comms',   () => `ground-station handoff missed; ${rnd(20,70)} s telemetry gap`,
               () => `re-routed via secondary station; gap backfilled from onboard buffer.`,
               id => `${id} dropped contact for under a minute; the agent rerouted and recovered the data.`],
+  ['inbound', () => `verified email · customer ops (scope: retask) — shift station ${rnd(40,110)} nm ${pick(['N','E','SE','W'])}`,
+              () => `sender signature + permission scope verified; corridor feasible; executing. Shown on dashboard.`,
+              id => `A customer sent a signed email asking to move ${id}. The agent checked their permissions and flew the change.`],
+  ['inbound', () => `secure message · flight director (scope: full) — priority imaging window at 06:00Z`,
+              () => `scheduled; overnight payload duty rebalanced to bank the energy.`,
+              id => `The flight director messaged for a morning imaging window over ${id}'s area; the agent rearranged the night to make the power for it.`],
+  ['inbound', () => `email from unrecognized sender requests station change`,
+              () => `REJECTED — signature check failed, sender not in permission registry. Security notified; no action taken.`,
+              id => `Someone not on the permission list emailed asking to move ${id}. The agent refused and told security.`],
   ['comms',   () => `GNSS integrity flag (${rnd(3,9)} s)`,
               () => `cross-checked INS + celestial; position confidence restored, no drift.`,
               id => `${id}'s GPS flickered; the agent confirmed position other ways. All fine.`],
