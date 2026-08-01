@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LONGWATCH — unattended stratospheric operations (simulated demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --surface:#10141b; --panel:#171e29; --panel2:#1d2634; --line:#232c3a;
+    --ink:#e8edf5; --muted:#8b96a5; --faint:#5a6577;
+    --amber:#ffd166; --ok:#3fae6a; --warn:#d99b2e; --crit:#d64550;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{background:var(--surface); color:var(--ink);
+       font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace; font-size:13px;
+       display:flex; flex-direction:column; height:100vh}
+  header{display:flex; align-items:baseline; gap:14px; padding:10px 16px 8px;
+         border-bottom:1px solid var(--line)}
+  .wordmark{font-family:'Barlow Condensed',Arial,sans-serif; font-weight:700; font-size:24px;
+            letter-spacing:.18em}
+  .wordmark span{color:--amber; color:var(--amber)}
+  .sub{color:var(--muted); font-size:11px; letter-spacing:.06em}
+  .spacer{flex:1}
+  #clock{font-size:13px; color:var(--ink)} #clock b{color:var(--amber)}
+  .simtag{font-size:10px; letter-spacing:.12em; color:var(--surface); background:var(--amber);
+          padding:2px 7px; font-weight:600}
+  .tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line);
+         border-bottom:1px solid var(--line)}
+  .tile{background:var(--panel); padding:9px 16px 11px}
+  .tile .label{font-family:'Barlow Condensed',Arial,sans-serif; font-weight:600; font-size:12px;
+               letter-spacing:.14em; color:var(--muted); text-transform:uppercase}
+  .tile .value{font-size:28px; font-weight:600; margin-top:3px; font-variant-numeric:tabular-nums}
+  .tile .foot{font-size:10.5px; color:var(--faint); margin-top:1px}
+  main{flex:1; display:grid; grid-template-columns:300px 1fr; min-height:0}
+  .fleet{border-right:1px solid var(--line); overflow-y:auto; background:var(--panel)}
+  .fleet h2, .feedcol h2{font-family:'Barlow Condensed',Arial,sans-serif; font-weight:600;
+      font-size:13px; letter-spacing:.16em; color:var(--muted); text-transform:uppercase;
+      padding:9px 14px 7px; border-bottom:1px solid var(--line);
+      position:sticky; top:0; background:var(--panel); z-index:2}
+  .ac{padding:10px 14px; border-bottom:1px solid var(--line)}
+  .ac .name{font-family:'Barlow Condensed',Arial,sans-serif; font-weight:700; font-size:15px;
+            letter-spacing:.1em; display:flex; justify-content:space-between}
+  .ac .name .phase{color:var(--muted); font-weight:500; font-size:12px}
+  .ac .row{display:flex; justify-content:space-between; font-size:11.5px; margin-top:4px;
+           color:var(--muted)}
+  .ac .row b{color:var(--ink); font-weight:500}
+  .battbar{height:4px; background:var(--panel2); margin-top:6px}
+  .battbar i{display:block; height:100%; background:var(--ok)}
+  .feedcol{display:flex; flex-direction:column; min-height:0; background:var(--surface)}
+  #esc{border-bottom:1px solid var(--line)}
+  .escitem{background:#241d10; border-left:3px solid var(--amber); margin:8px 12px; padding:9px 12px}
+  .escitem.t1{background:#2a1416; border-left-color:var(--crit)}
+  .escitem.t3{background:#141c28; border-left-color:#6aa5e0}
+  .escitem .k{color:var(--amber); font-weight:600; letter-spacing:.08em; font-size:11px}
+  .escitem.t1 .k{color:var(--crit)} .escitem.t3 .k{color:#6aa5e0}
+  .escitem .outreach{color:var(--ink); font-size:11.5px; border-top:1px dashed var(--line);
+      margin-top:5px; padding-top:5px}
+  .escitem .outreach b{color:var(--amber); font-weight:600}
+  .escitem.t1 .outreach b{color:var(--crit)}
+  .escitem p{margin:4px 0; font-size:12.5px; line-height:1.45}
+  .escitem .rec{color:var(--muted)}
+  .escitem .await{color:var(--faint); font-size:11px}
+  .escitem button{font-family:inherit; font-size:11.5px; letter-spacing:.06em; cursor:pointer;
+      background:var(--amber); color:var(--surface); border:0; padding:5px 14px; font-weight:600;
+      margin:4px 8px 2px 0}
+  .escitem button.hold{background:transparent; color:var(--muted); border:1px solid var(--line)}
+  #feed{flex:1; overflow-y:auto; padding:6px 0}
+  .ev{padding:7px 16px; border-bottom:1px solid #1a212d; line-height:1.5; font-size:12.5px}
+  .ev .t{color:var(--faint)}
+  .ev .who{color:var(--ink); font-weight:600}
+  .ev .kind{font-weight:600; letter-spacing:.06em}
+  .ev .kind.weather{color:var(--warn)} .ev .kind.power{color:var(--amber)}
+  .ev .kind.mech{color:#c98adb} .ev .kind.comms{color:#6aa5e0}
+  .ev .kind.human{color:var(--ok)} .ev .kind.escal{color:var(--crit)}
+  .ev .act{color:var(--muted)}
+  .ev .auto{color:var(--ok); font-size:11px}
+  footer{border-top:1px solid var(--line); padding:6px 16px; font-size:10.5px; color:var(--faint);
+         display:flex; gap:18px; flex-wrap:wrap}
+  @media (max-width:820px){ main{grid-template-columns:1fr} .fleet{display:none}
+    .tiles{grid-template-columns:repeat(2,1fr)} }
+</style>
+
+<header>
+  <div class="wordmark">LONG<span>WATCH</span></div>
+  <div class="sub">AI-native operations for week-long stratospheric flights</div>
+  <div class="simtag">SIMULATED DEMO</div>
+  <div class="spacer"></div>
+  <div id="clock">MISSION DAY <b id="mday">9</b> · <span id="mtime">14:00</span>Z</div>
+</header>
+
+<div class="tiles">
+  <div class="tile"><div class="label">Events handled</div>
+    <div class="value" id="s-events">0</div><div class="foot">this mission</div></div>
+  <div class="tile"><div class="label">Auto-resolved</div>
+    <div class="value" id="s-auto">100%</div><div class="foot">no human needed</div></div>
+  <div class="tile"><div class="label">Escalated to human</div>
+    <div class="value" id="s-esc">0</div><div class="foot">irreversible or mission-critical only</div></div>
+  <div class="tile"><div class="label">Human time this mission</div>
+    <div class="value" id="s-mins">0<span style="font-size:15px"> min</span></div>
+    <div class="foot">vs ~500 crew-hours at 24/7 watch</div></div>
+</div>
+
+<main>
+  <div class="fleet">
+    <h2>Fleet — 3 aircraft on station</h2>
+    <div id="acs"></div>
+  </div>
+  <div class="feedcol">
+    <div id="esc"></div>
+    <h2>Agent decision feed</h2>
+    <div id="feed"></div>
+  </div>
+</main>
+
+<footer>
+  <span>Built by Dan Brown for the Icarus application</span>
+  <span>Escalations reach humans over existing channels: secure message, encrypted email, phone — routed by emergency tier</span>
+  <span>Simulation: events are generated, the operations pattern is the demo</span>
+  <span>Same architecture as my AI-Native MSP: agent acts, approval gates guard, audit log records</span>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const rnd = (a,b) => Math.round(a + Math.random()*(b-a));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+
+// ---- mission clock: 1 mission-hour ≈ 2.2 s real ----
+let mh = 9*24 + 14; // start day 9, 14:00Z
+setInterval(() => { mh++; $('mday').textContent = Math.floor(mh/24);
+  $('mtime').textContent = String(mh%24).padStart(2,'0') + ':00'; }, 2200);
+const stamp = () => `D${String(Math.floor(mh/24)).padStart(2,'0')} ${String(mh%24).padStart(2,'0')}:${String(rnd(0,59)).padStart(2,'0')}`;
+
+// ---- fleet ----
+const fleet = [
+  {id:'AP-01', station:'34.9N 117.9W · Mojave R-2508', fl:641, batt:83},
+  {id:'AP-02', station:'31.2N 64.1W · W. Atlantic',    fl:628, batt:76},
+  {id:'AP-03', station:'52.4N 3.1E · North Sea',       fl:612, batt:64},
+];
+function phase(){ const h = mh%24; return (h>=14 && h<=23) ? '☀ charge' : '☾ endure'; }
+function drawFleet(){
+  $('acs').innerHTML = fleet.map(a => `
+    <div class="ac">
+      <div class="name">${a.id} <span class="phase">${phase()}</span></div>
+      <div class="row"><span>altitude</span><b>FL${a.fl}</b></div>
+      <div class="row"><span>battery</span><b>${a.batt}%</b></div>
+      <div class="row"><span>station</span><b style="font-size:10.5px">${a.station}</b></div>
+      <div class="row"><span>motors · link</span><b>4/4 · OK</b></div>
+      <div class="battbar"><i style="width:${a.batt}%; background:${a.batt<25?'var(--crit)':a.batt<45?'var(--warn)':'var(--ok)'}"></i></div>
+    </div>`).join('');
+}
+setInterval(() => { // gentle state drift
+  for(const a of fleet){
+    const day = (mh%24)>=14 && (mh%24)<=23;
+    a.batt = Math.max(18, Math.min(100, a.batt + (day ? rnd(1,3) : -rnd(1,2))));
+    a.fl   = Math.max(595, Math.min(662, a.fl + rnd(-2,2)));
+  }
+  drawFleet();
+}, 2200);
+drawFleet();
+
+// ---- event library: [kind, detect, action] ----
+const EVENTS = [
+  ['weather', () => `50 hPa wind ${rnd(39,54)} kt over station — exceeds ${38} kt hold threshold`,
+              () => `climbed to FL${rnd(650,662)}; wind ${rnd(11,24)} kt in upper band. Hold maintained.`],
+  ['weather', () => `jet streak forecast to clip holding ellipse in ${rnd(4,9)} h`,
+              () => `shifted station ${rnd(35,85)} nm ${pick(['N','NE','E','W','SW'])}; loiter re-optimized inside cleared corridor.`],
+  ['weather', () => `cirrus deck cutting solar input ${rnd(11,19)}%`,
+              () => `extended charge phase ${rnd(40,80)} min; payload duty deferred to full pack.`],
+  ['power',   () => `night-survival margin forecast ${rnd(5,11)}% below floor at lat ${rnd(49,54)}N`,
+              () => `payload duty −${rnd(25,40)}%, drift-descent profile armed; margin restored +${rnd(3,6)}%.`],
+  ['power',   () => `cell group ${rnd(2,4)} delta ${rnd(40,65)} mV above pack mean`,
+              () => `pack rebalanced in-flight; group flagged for depot inspection. Monitoring.`],
+  ['mech',    () => `motor ${rnd(1,4)} temp +${rnd(6,12)}°C vs symmetric twin at equal load`,
+              () => `derated to ${rnd(78,88)}%; thrust redistributed. Trend flat after ${rnd(15,40)} min.`],
+  ['mech',    () => `elevon actuator current ripple trending up (${pick(['left','right'])})`,
+              () => `duty-cycle rest scheduled; control margins nominal on remaining surfaces.`],
+  ['comms',   () => `ground-station handoff missed; ${rnd(20,70)} s telemetry gap`,
+              () => `re-routed via secondary station; gap backfilled from onboard buffer.`],
+  ['comms',   () => `GNSS integrity flag (${rnd(3,9)} s)`,
+              () => `cross-checked INS + celestial; position confidence restored, no drift.`],
+];
+const ESCALATIONS = [
+  {tier:3, name:'ROUTINE',
+   what: () => `customer retask: shift station ${rnd(140,220)} nm into airspace outside the pre-cleared corridor`,
+   rec:  () => `feasible at FL660 transit, energy margin +${rnd(6,14)}%. Airspace release needs sign-off.`,
+   outreach: () => `secure message → <b>mission ops on-call</b> · no time pressure, aircraft holds`},
+  {tier:2, name:'URGENT',
+   what: () => `restricted area activates in ${rnd(2,5)} h overlapping the holding ellipse`,
+   rec:  () => `recommend ${rnd(50,90)} nm reposition west inside the cleared corridor before activation.`,
+   outreach: () => `encrypted email + secure message → <b>flight director</b> · ops channel notified · unanswered ${rnd(10,20)} min → phone`},
+  {tier:1, name:'CRITICAL', act:true,
+   what: () => `cell-group ${rnd(2,4)} thermal-runaway precursor: +${rnd(4,8)}°C in ${rnd(8,18)} min`,
+   rec:  () => `isolating cell group now and descending to FL${rnd(560,585)}; mission continues at reduced ceiling.`,
+   outreach: () => `phoning <b>power-systems engineer on-call</b> DIRECT — straight to whoever fixes it · chain notified in parallel (flight director, CEO · encrypted email)`},
+];
+
+// ---- counters ----
+let nEvents = 0, nEsc = 0, humanMin = 0;
+function tiles(){
+  $('s-events').textContent = nEvents;
+  $('s-esc').textContent = nEsc;
+  $('s-auto').textContent = nEvents ? Math.round(100*(nEvents-nEsc)/nEvents) + '%' : '100%';
+  $('s-mins').innerHTML = humanMin + '<span style="font-size:15px"> min</span>';
+}
+
+// ---- feed ----
+function feedItem(html){
+  const d = document.createElement('div'); d.className = 'ev'; d.innerHTML = html;
+  $('feed').prepend(d);
+  while($('feed').children.length > 60) $('feed').lastChild.remove();
+}
+function autoEvent(){
+  const [kind, detect, action] = pick(EVENTS);
+  const ac = pick(fleet);
+  nEvents++; tiles();
+  feedItem(`<span class="t">${stamp()}</span> <span class="who">${ac.id}</span> ` +
+    `<span class="kind ${kind}">${kind.toUpperCase()}</span> — ${detect()}<br>` +
+    `<span class="act">→ agent: ${action()}</span> <span class="auto">AUTO · ${rnd(3,14)} s</span>`);
+}
+function escalate(){
+  const e = pick(ESCALATIONS), ac = pick(fleet);
+  const what = e.what(), rec = e.rec(), out = e.outreach();
+  nEvents++; nEsc++; tiles();
+  feedItem(`<span class="t">${stamp()}</span> <span class="who">${ac.id}</span> ` +
+    `<span class="kind escal">ESCALATED T${e.tier}</span> — ${what}<br>` +
+    `<span class="act">→ outreach: ${out}</span>`);
+  const d = document.createElement('div'); d.className = 'escitem t' + e.tier;
+  const t0 = Date.now();
+  const btns = e.act
+    ? `<button>Confirm</button><button class="hold">Override</button> <span class="await"></span>`
+    : `<button>Approve</button><button class="hold">Hold</button> <span class="await"></span>`;
+  d.innerHTML = `<span class="k">TIER ${e.tier} · ${e.name} — ${ac.id}</span><p>${what}</p>` +
+    `<p class="rec">agent recommendation: ${rec}</p>` +
+    `<p class="outreach">${out}</p>` + btns;
+  const await_ = d.querySelector('.await');
+  const done = (kind, txt) => { clearInterval(iv); d.remove(); tiles();
+    feedItem(`<span class="t">${stamp()}</span> <span class="who">${ac.id}</span> ` +
+      `<span class="kind human">${kind}</span> — <span class="act">${txt}</span>`); };
+  let iv;
+  if(e.act){ // critical: agent already acting; approval is optional
+    iv = setInterval(() => {
+      const s = Math.round((Date.now()-t0)/1000);
+      await_.textContent = `agent acting now — override window ${Math.max(0, 30-s)} s`;
+      if(s >= 30) done('NO OVERRIDE', 'action stands: ' + rec + ' Chain notified with full log.');
+    }, 1000);
+  } else {
+    iv = setInterval(() => { await_.textContent =
+      'awaiting human ' + Math.round((Date.now()-t0)/1000) + ' s — aircraft holds safe profile'; }, 1000);
+  }
+  d.querySelector('button').onclick = () => { humanMin += 1;
+    done(e.act ? 'HUMAN CONFIRMED' : 'HUMAN APPROVED', 'executing: ' + rec); };
+  d.querySelector('.hold').onclick = () => { humanMin += 1;
+    done(e.act ? 'HUMAN OVERRIDE' : 'HUMAN HELD',
+      e.act ? 'agent reverting to safe hold; re-planning with human constraint.'
+            : 'agent maintains safe hold, will re-present with updated forecast.'); };
+  $('esc').append(d);
+}
+
+// ---- pacing: steady auto events, occasional escalation ----
+setTimeout(function loop(){ autoEvent(); setTimeout(loop, rnd(2800,5200)); }, 600);
+setTimeout(function eloop(){ escalate(); setTimeout(eloop, rnd(38000,70000)); }, 9000);
+</script>
