@@ -88,8 +88,6 @@
   .ev .kind.human{color:var(--ok)} .ev .kind.escal{color:var(--crit)}
   .ev .act{color:var(--muted)}
   .ev .auto{color:var(--ok); font-size:11px}
-  footer{border-top:1px solid var(--line); padding:6px 16px; font-size:10.5px; color:var(--faint);
-         display:flex; gap:18px; flex-wrap:wrap}
   @media (max-width:820px){ main{grid-template-columns:1fr} .fleet{display:none}
     .tiles{grid-template-columns:repeat(2,1fr)} }
 </style>
@@ -130,14 +128,6 @@
   </div>
 </main>
 
-<footer>
-  <span>Built by Dan Brown for the Icarus application</span>
-  <span>Two-way channels: escalations go out by tier; signed emails and secure messages from permissioned senders command the fleet in</span>
-  <span>Memory at two speeds — the Alven pattern: a mission cache feeds every decision; finished missions train the next</span>
-  <span>Every mission ends with an agent-written debrief: what it learned, tactics suggestions for the teams it overwatched, how it evolves</span>
-  <span>Simulation: events are generated, the operations pattern is the demo</span>
-  <span>Same architecture as my AI-Native MSP: agent acts, approval gates guard, audit log records</span>
-</footer>
 
 <script>
 const $ = id => document.getElementById(id);
