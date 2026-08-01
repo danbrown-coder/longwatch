@@ -133,7 +133,8 @@
 <footer>
   <span>Built by Dan Brown for the Icarus application</span>
   <span>Two-way channels: escalations go out by tier; signed emails and secure messages from permissioned senders command the fleet in</span>
-  <span>Memory at two speeds — the pattern I built at Alven: a mission cache feeds every event into the next decision, and each finished mission trains the next, its lessons written into audits humans review for suggested tactics changes</span>
+  <span>Memory at two speeds — the Alven pattern: a mission cache feeds every decision; finished missions train the next</span>
+  <span>Every mission ends with an agent-written debrief: what it learned, tactics suggestions for the teams it overwatched, how it evolves</span>
   <span>Simulation: events are generated, the operations pattern is the demo</span>
   <span>Same architecture as my AI-Native MSP: agent acts, approval gates guard, audit log records</span>
 </footer>
@@ -258,7 +259,7 @@ const story = new Map();
  [5,'One battery group on AP-02 drifted out of line. The agent rebalanced it and flagged it for inspection after landing.'],
  [6,'High winds over the North Sea. AP-03 climbed above them and held its watch.'],
  [7,'A customer asked to move AP-02. A human approved by secure message; the agent flew the move overnight.'],
- [8,'Quiet day. Dozens of small events handled; no person was needed.'],
+ [8,'Quiet day. Dozens of small events handled; no person was needed. Weekly debrief went out: what the fleet has learned so far, and two tactics suggestions for the teams it overwatches.'],
 ].forEach(([d,t]) => story.set(d, [t]));
 function addStory(text, human){
   const d = Math.floor(mh/24);
